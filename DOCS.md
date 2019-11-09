@@ -64,6 +64,8 @@ It will also update the file `.tvs/HEAD.id`.
 
 ## `Commit`
 
+The `Commit` class is basically defining the nodes of our linked list. Thus each commit is just a node of a linked list.
+
 ### private members
 
 - `A_info info`: Info about the author of commit wrapped an `A_info` class.
