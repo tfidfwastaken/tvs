@@ -9,7 +9,7 @@ file2.c
 ├── branch_info  
 ├── HEAD.id  
 ├── author_info  
-├── nodes.bin  
+├── commit_nodes.bin  
 ├── commit_1  
 │  ├── file1.c // ideally should be compressed but we'll see later  
 │  └── file2.c  
@@ -49,9 +49,7 @@ The `Branch` class contains information about the commit history which is given 
 
 - `void commit(char *msg)`
 
-  This function will create a new commit ID. It will create a new `Commit` object with that ID and message, and make `HEAD` point to that commit. Then it will copy all the contents of `added_files` to `.tvs/commit_id/`, by calling `HEAD`'s `store_files()` function.  
-  Then the `msg` is stored to `HEAD`'s node.
-  
+  This function will create a new commit ID. Then it will create a new `Commit` object with that ID and `msg`, and make `HEAD` point to that commit. Then it will copy all the contents of `added_files` to `.tvs/commit_id/`, by calling `HEAD`'s `store_files()` function.
 
 - `void checkout(int commit_id)`
 
