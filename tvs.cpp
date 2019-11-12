@@ -12,9 +12,15 @@ private:
 
 public:
     Branch();
-    int get_node_count();
-    char* get_branch_name();
-    char* get_file_list();
+    int get_node_count() {
+        return no_of_nodes;
+    }
+    char* get_branch_name() {
+        return branch_name;
+    }
+    char* get_file_list() {
+        return added_files;
+    }
     void commit_log(int n);
     void add(char **filenames);
     void status();
@@ -33,9 +39,13 @@ private:
     Commit *next, *prev;
 
 public:
-    A_info get_author_info();
-    void set_author_info();
-    int get_commit_id();
+    Commit();
+    A_info get_author_info() {
+        return info;        
+    }
+    int get_commit_id() {
+        return commit_id;
+    }
     void store_files(char **added_files);
     void display_commit_data();
 };
@@ -45,8 +55,18 @@ private:
     char *username;
     char *email;
 public:
-    char* get_username();
-    char* get_email();
-    char* set_username();
-    char* set_email();
+    A_info();
+    char* get_username() {
+        return username;
+    }
+    char* get_email() {
+        return email;
+    }
+    void set_username(char *uname) {
+        this.username = uname;
+    }
+    void set_email(char *email) {
+        this.email = email;
+    }
 };
+
