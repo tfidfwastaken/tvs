@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <set>
+#include <list>
 #include <cstring>
 #include <experimental/filesystem>
 using namespace std;
@@ -10,19 +12,15 @@ class Commit;
 
 class Branch {
 private:
-    Commit *HEAD;
-    int no_of_nodes;
+    //Commit *HEAD;
+    list<Commit> commits;
+    list<Commit>::iterator HEAD;
+    //int no_of_nodes;
     string branch_name;
-    string *added_files;
+    set<string> added_files;
 
 public:
-    Branch() :
-        HEAD(NULL),
-        no_of_nodes(0),
-        branch_name("master"),
-        added_files(NULL)
-    {
-    }
+    Branch();
     int get_node_count() {
         return no_of_nodes;
     }
@@ -69,7 +67,7 @@ private:
     string commit_msg;
 
 public:
-    Commit *next, *prev;
+    // Commit *next, *prev;
     Commit();
     A_info get_author_info() {
         return info;        
@@ -100,21 +98,77 @@ int tvsinit()
 }
 
 // Branch function definitions
+Branch::Branch() :
+    branch_name("master") {
+
+    fs::path tvspath("./.tvs");
+    if(!fs::exists(tvspath)) {
+        tvsinit();
+    } else {
+        ifstream b_data(tvspath + "/branch_info");
+        string head_id, filename;
+        getline(b_data, head_id);
+        getline(b_data, branch_name);
+        while(b_data) {
+            getline(b_data, filename);
+            added_files.insert(filename);
+        }
+        b_data.close();
+
+        ifstream c_data(tvspath + "/commit_nodes.bin", ios::binary);
+        Commit commit;
+        while(c_data.read(&commit, sizeof(Commit))) {
+            commits.push_back(commit);
+        }
+        for(HEAD = commits.end(); (*HEAD).commit_id != head_id; HEAD++);
+    }
+}
+
+Branch::~Branch()
+{
+    auto commit_file_name = tvspath + "/commit_nodes.bin";
+    auto branch_file_name = tvspath + "/branch_info";
+    remove(commit_file_name);
+    remove(branch_file_name);
+
+    ofstream c_data(commit_file_name, ios::binary);
+    for(auto cmt = commits.end(); cmt != commits.begin(); cmt--) {
+        c_data.write(&(*cmt), sizeof(Commit));
+    }
+    c_data.close();
+    
+    ofstream b_data(commit_file_name);
+    b_data << (*HEAD).commit_id << endl;
+    b_data << (*HEAD).branch_name << endl;
+    for(auto filename : added_files) {
+        b_data << filename << endl;
+    }
+    b_data.close();
+
+    commits.clear();
+    added_files.clear();
+}
+
 void Branch::commit_log(int n)
 {
-    if(HEAD != NULL) {
-        int i = 0;
-        auto tmp = HEAD;
-        while (i < n || tmp != NULL) {
-            tmp->display_commit_data();
-            ++i;
-            tmp = tmp->prev;
+    //if(HEAD != NULL) {
+    //    int i = 0;
+    //    auto tmp = HEAD;
+    //    while (i < n || tmp != NULL) {
+    //        tmp->display_commit_data();
+    //        ++i;
+    //        tmp = tmp->prev;
+    //    }
+    //} else {
+    if(!commits.empty()) {
+        auto commit = HEAD;
+        for(int i = 0; i < n; ++i) {
+            (*commit).display_commit_data();
         }
     } else {
         cout << "No commits yet." << endl;
     }
 }
-
 
 // Commit function declarations
 void Commit::display_commit_data()
