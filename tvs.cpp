@@ -8,36 +8,6 @@
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
-class Commit;
-
-class Branch {
-private:
-    //Commit *HEAD;
-    list<Commit> commits;
-    list<Commit>::iterator HEAD;
-    //int no_of_nodes;
-    string branch_name;
-    set<string> added_files;
-
-public:
-    Branch();
-    int get_node_count() {
-        return no_of_nodes;
-    }
-    string get_branch_name() {
-        return branch_name;
-    }
-    string* get_file_list() {
-        return added_files;
-    }
-    void commit_log(int n);
-    void add(char **filenames);
-    void status();
-    void commit(char *msg);
-    void checkout(int commit_id);
-    ~Branch();
-};
-
 class A_info {
 private:
     string username;
@@ -62,8 +32,8 @@ class Commit {
 private:
     A_info info;
     int commit_id;
-    int next_id;
-    int prev_id;
+    // int next_id;
+    // int prev_id;
     string commit_msg;
 
 public:
@@ -82,14 +52,53 @@ public:
     void display_commit_data();
 };
 
+class Branch {
+private:
+
+    // This is a linked list of Commit objects
+    list<Commit> commits;
+
+    // HEAD is an iterator that points to a commit obj.
+    // We will be assigning it to current commit.
+    list<Commit>::iterator HEAD;
+
+    string branch_name;
+
+    // Set of strings. Using a set because fast access,
+    // which is needed when there are way too many files.
+    set<string> added_files;
+
+public:
+    Branch();
+    int get_node_count() {
+        return no_of_nodes;
+    }
+    string get_branch_name() {
+        return branch_name;
+    }
+    set<string> get_added_file() {
+        return added_files;
+    }
+    void commit_log(int n);
+    void add(char **filenames);
+    void status();
+    void commit(char *msg);
+    void checkout(int commit_id);
+    ~Branch();
+};
+
+
 // Init function
 
 int tvsinit()
 {
+    // creates a path object
     fs::path tvspath("./.tvs");
+
     if(!fs::exists(tvspath)) {
-        if(!fs::create_directory(tvspath)) {
+        if(!fs::create_directory(tvspath)) { // this if is just a failure check
             cerr << strerror(errno) << endl;
+            return -2;
         }
         return 0;
     }
@@ -105,6 +114,10 @@ Branch::Branch() :
     if(!fs::exists(tvspath)) {
         tvsinit();
     } else {
+
+        // Reading all repo data from files
+
+        // Reading branch_info
         ifstream b_data(tvspath + "/branch_info");
         string head_id, filename;
         getline(b_data, head_id);
@@ -115,28 +128,36 @@ Branch::Branch() :
         }
         b_data.close();
 
+        // Reading binary commit data and loading it onto our list<Commit>
         ifstream c_data(tvspath + "/commit_nodes.bin", ios::binary);
         Commit commit;
         while(c_data.read(&commit, sizeof(Commit))) {
             commits.push_back(commit);
         }
+        
+        // Setting our HEAD to point to the current commit
         for(HEAD = commits.end(); (*HEAD).commit_id != head_id; HEAD++);
     }
 }
 
 Branch::~Branch()
 {
+    // auto just means infer the type, because I'm too lazy to figure it out myself
     auto commit_file_name = tvspath + "/commit_nodes.bin";
     auto branch_file_name = tvspath + "/branch_info";
     remove(commit_file_name);
     remove(branch_file_name);
 
+    // Writing our data to files
+
+    // Writing commit data to binary format
     ofstream c_data(commit_file_name, ios::binary);
     for(auto cmt = commits.end(); cmt != commits.begin(); cmt--) {
         c_data.write(&(*cmt), sizeof(Commit));
     }
     c_data.close();
     
+    // Writing branch_info
     ofstream b_data(commit_file_name);
     b_data << (*HEAD).commit_id << endl;
     b_data << (*HEAD).branch_name << endl;
@@ -145,6 +166,7 @@ Branch::~Branch()
     }
     b_data.close();
 
+    // Cleaning up data
     commits.clear();
     added_files.clear();
 }
