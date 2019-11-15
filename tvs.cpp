@@ -1,7 +1,10 @@
 #include <iostream>
 #include <fstream>
-
+#include <experimental/filesystem>
 using namespace std;
+namespace fs = std::experimental::filesystem;
+
+class Commit;
 
 class Branch {
 private:
@@ -18,7 +21,7 @@ public:
     char* get_branch_name() {
         return branch_name;
     }
-    char* get_file_list() {
+    char** get_file_list() {
         return added_files;
     }
     void commit_log(int n);
@@ -27,6 +30,26 @@ public:
     void commit(char *msg);
     void checkout(int commit_id);
     ~Branch();
+};
+
+class A_info {
+private:
+    char *username;
+    char *email;
+public:
+    A_info();
+    char* get_username() {
+        return username;
+    }
+    char* get_email() {
+        return email;
+    }
+    void set_username(char *uname) {
+        this->username = uname;
+    }
+    void set_email(char *email) {
+        this->email = email;
+    }
 };
 
 class Commit {
@@ -50,23 +73,22 @@ public:
     void display_commit_data();
 };
 
-class A_info {
-private:
-    char *username;
-    char *email;
-public:
-    A_info();
-    char* get_username() {
-        return username;
-    }
-    char* get_email() {
-        return email;
-    }
-    void set_username(char *uname) {
-        this.username = uname;
-    }
-    void set_email(char *email) {
-        this.email = email;
-    }
-};
+// Init function
 
+int tvsinit()
+{
+    fs::path tvspath("./.tvs");
+    cout << fs::exists(tvspath) << endl;
+    return 0;
+}
+
+// Branch function definitions
+
+
+// main for testing
+
+int main()
+{
+    tvsinit();
+    return 0;
+}
