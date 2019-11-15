@@ -78,8 +78,14 @@ public:
 int tvsinit()
 {
     fs::path tvspath("./.tvs");
-    cout << fs::exists(tvspath) << endl;
-    return 0;
+    if(!fs::exists(tvspath)) {
+        if(!fs::create_directory(tvspath)) {
+            cerr << strerror(errno) << endl;
+        }
+        return 0;
+    }
+    cerr << "Already a tvs repo" << endl;
+    return -1;
 }
 
 // Branch function definitions
