@@ -1,5 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <cstring>
 #include <experimental/filesystem>
 using namespace std;
 namespace fs = std::experimental::filesystem;
@@ -10,18 +12,24 @@ class Branch {
 private:
     Commit *HEAD;
     int no_of_nodes;
-    char *branch_name;
-    char **added_files;
+    string branch_name;
+    string *added_files;
 
 public:
-    Branch();
+    Branch() :
+        HEAD(NULL),
+        no_of_nodes(0),
+        branch_name("master"),
+        added_files(NULL)
+    {
+    }
     int get_node_count() {
         return no_of_nodes;
     }
-    char* get_branch_name() {
+    string get_branch_name() {
         return branch_name;
     }
-    char** get_file_list() {
+    string* get_file_list() {
         return added_files;
     }
     void commit_log(int n);
@@ -34,14 +42,14 @@ public:
 
 class A_info {
 private:
-    char *username;
-    char *email;
+    string username;
+    string email;
 public:
     A_info();
-    char* get_username() {
+    string get_username() {
         return username;
     }
-    char* get_email() {
+    string get_email() {
         return email;
     }
     void set_username(char *uname) {
@@ -58,16 +66,19 @@ private:
     int commit_id;
     int next_id;
     int prev_id;
-    char *commit_msg;
-    Commit *next, *prev;
+    string commit_msg;
 
 public:
+    Commit *next, *prev;
     Commit();
     A_info get_author_info() {
         return info;        
     }
     int get_commit_id() {
         return commit_id;
+    }
+    string get_commit_msg() {
+        return commit_msg;
     }
     void store_files(char **added_files);
     void display_commit_data();
@@ -89,10 +100,34 @@ int tvsinit()
 }
 
 // Branch function definitions
+void Branch::commit_log(int n)
+{
+    if(HEAD != NULL) {
+        int i = 0;
+        auto tmp = HEAD;
+        while (i < n || tmp != NULL) {
+            tmp->display_commit_data();
+            ++i;
+            tmp = tmp->prev;
+        }
+    } else {
+        cout << "No commits yet." << endl;
+    }
+}
 
+
+// Commit function declarations
+void Commit::display_commit_data()
+{
+    auto auth = get_author_info();
+    cout << "Message: " << get_commit_msg() << endl;
+    cout << "Author: " << endl;
+    cout << "Name: " << auth.get_username() << endl;
+    cout << "Email: " << auth.get_email() << endl;
+    cout << "ID: " << get_commit_id() << endl; 
+}
 
 // main for testing
-
 int main()
 {
     tvsinit();
