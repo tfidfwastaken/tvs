@@ -1,63 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <set>
-#include <list>
-#include <cstring>
-#include <experimental/filesystem>
-using namespace std;
-namespace fs = std::experimental::filesystem;
-
-class A_info {
-private:
-    string username;
-    string email;
-public:
-    // A_info();
-    string get_username() {
-        return username;
-    }
-    string get_email() {
-        return email;
-    }
-    void set_username(string uname) {
-        this->username = uname;
-    }
-    void set_email(string email) {
-        this->email = email;
-    }
-};
-
-class Commit {
-private:
-    A_info info;
-    string commit_id;
-    // int next_id;
-    // int prev_id;
-    string commit_msg;
-    int prev_id;
-    vector<string> added_files;
-
-public:
-    // Commit *next, *prev;
-    Commit();
-    ~Commit();
-    A_info get_author_info() {
-        return info;
-    }
-    string get_commit_id() {
-        return commit_id;
-    }
-    string get_commit_msg() {
-        return commit_msg;
-    }
-    void make_commit(string msg);
-    void add_file(string filename);
-    void store_files();
-    void load_files();
-    void display_commit_data();
-    void checkout(string id);
-};
+#include "tvs.h"
 
 Commit::Commit() : info(A_info())
 {
@@ -125,7 +66,7 @@ void Commit::checkout(string id)
         ofile << commit_id << endl;
         ofile << commit_msg << endl;
     } else {
-        cout << "Working directory not clean.\nPlease commit your changes before checkout." <<endl;
+  
     }
 }
 
@@ -175,27 +116,4 @@ int tvsinit()
     }
     cerr << "Already a tvs repo" << endl;
     return -1;
-}
-
-// main for testing
-int main()
-{
-    tvsinit();
-    Commit c;
-    cout << "---------------" << endl;
-    c.add_file("tvs.cpp");
-    c.make_commit("henlo");
-    cout << c.get_commit_id() << endl;
-    cout << "---------------" << endl;
-    c.add_file("DOCS.md");
-    c.make_commit("henlo2");
-    ofstream("DOCS.md").put('a');
-    c.add_file("DOCS.md");
-    c.make_commit("henlo3");
-    cout << "---------------" << endl;
-    cout << c.get_commit_id() << endl;
-    c.checkout("1");
-    cout << c.get_commit_id() << endl;
-    // master_branch.commit_log(2);
-    return 0;
 }
