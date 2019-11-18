@@ -48,8 +48,10 @@ public:
     string get_commit_msg() {
         return commit_msg;
     }
-    void store_files(char **added_files);
+    void store_files(string *added_files);
     void display_commit_data();
+    void save(ofstream &ofile);
+    void open(ifstream &ifile);
 };
 
 class Branch {
@@ -71,7 +73,7 @@ private:
 public:
     Branch();
     int get_node_count() {
-        return no_of_nodes;
+        return commits.size();
     }
     string get_branch_name() {
         return branch_name;
@@ -80,7 +82,7 @@ public:
         return added_files;
     }
     void commit_log(int n);
-    void add(char **filenames);
+    void add(string *filenames);
     void status();
     void commit(char *msg);
     void checkout(int commit_id);
@@ -93,7 +95,7 @@ public:
 int tvsinit()
 {
     // creates a path object
-    fs::path tvspath("./.tvs");
+    string tvspath("./.tvs");
 
     if(!fs::exists(tvspath)) {
         if(!fs::create_directory(tvspath)) { // this if is just a failure check
@@ -107,8 +109,7 @@ int tvsinit()
 }
 
 // Branch function definitions
-Branch::Branch() :
-    branch_name("master") {
+Branch::Branch() : branch_name("master") {
 
     fs::path tvspath("./.tvs");
     if(!fs::exists(tvspath)) {
@@ -118,7 +119,7 @@ Branch::Branch() :
         // Reading all repo data from files
 
         // Reading branch_info
-        ifstream b_data(tvspath + "/branch_info");
+        ifstream b_data(tvspath.string() + "/branch_info");
         string head_id, filename;
         getline(b_data, head_id);
         getline(b_data, branch_name);
@@ -129,22 +130,23 @@ Branch::Branch() :
         b_data.close();
 
         // Reading binary commit data and loading it onto our list<Commit>
-        ifstream c_data(tvspath + "/commit_nodes.bin", ios::binary);
+        ifstream c_data(tvspath.string() + "/commit_nodes.bin", ios::binary);
         Commit commit;
         while(c_data.read(&commit, sizeof(Commit))) {
             commits.push_back(commit);
         }
         
         // Setting our HEAD to point to the current commit
-        for(HEAD = commits.end(); (*HEAD).commit_id != head_id; HEAD++);
+        for(HEAD = commits.end(); (*HEAD).get_commit_id() != head_id; HEAD++);
     }
 }
 
 Branch::~Branch()
 {
     // auto just means infer the type, because I'm too lazy to figure it out myself
-    auto commit_file_name = tvspath + "/commit_nodes.bin";
-    auto branch_file_name = tvspath + "/branch_info";
+    fs::path tvspath("./.tvs");
+    auto commit_file_name = tvspath.string() + "/commit_nodes.bin";
+    auto branch_file_name = tvspath.string() + "/branch_info";
     remove(commit_file_name);
     remove(branch_file_name);
 
@@ -153,14 +155,15 @@ Branch::~Branch()
     // Writing commit data to binary format
     ofstream c_data(commit_file_name, ios::binary);
     for(auto cmt = commits.end(); cmt != commits.begin(); cmt--) {
-        c_data.write(&(*cmt), sizeof(Commit));
+        // c_data.write(&(*cmt), sizeof(Commit));
+        cmt.save(c_data);
     }
     c_data.close();
     
     // Writing branch_info
     ofstream b_data(commit_file_name);
-    b_data << (*HEAD).commit_id << endl;
-    b_data << (*HEAD).branch_name << endl;
+    b_data << (*HEAD).get_commit_id() << endl;
+    b_data << branch_name << endl;
     for(auto filename : added_files) {
         b_data << filename << endl;
     }
@@ -203,9 +206,15 @@ void Commit::display_commit_data()
     cout << "ID: " << get_commit_id() << endl; 
 }
 
+void save(ofstream &of)
+{
+    of.write(
+
 // main for testing
 int main()
 {
     tvsinit();
+    Branch master_branch;
+    master_branch.commit_log(2);
     return 0;
 }
