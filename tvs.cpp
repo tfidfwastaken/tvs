@@ -38,12 +38,12 @@ private:
 
 public:
     // Commit *next, *prev;
-    Commit() : info(A_info()), commit_id(string()), commit_msg("") {};
+    // Commit() : info(A_info()), commit_id("hello"), commit_msg("") {};
     A_info get_author_info() {
         return info;
     }
     string get_commit_id() {
-        return "";
+        return commit_id;
     }
     string get_commit_msg() {
         return commit_msg;
@@ -58,11 +58,11 @@ class Branch {
 private:
 
     // This is a linked list of Commit objects
-    list<Commit> commits;
+    vector<Commit> commits;
 
     // HEAD is an iterator that points to a commit obj.
     // We will be assigning it to current commit.
-    list<Commit>::iterator HEAD;
+    // list<Commit>::iterator HEAD;
 
     string branch_name;
 
@@ -111,7 +111,7 @@ int tvsinit()
 // Branch function definitions
 Branch::Branch() : branch_name("master") {
 
-    commits = list<Commit>();
+    cout << commits.size();
     fs::path tvspath("./.tvs");
     if(!fs::exists(tvspath)) {
         tvsinit();
@@ -133,12 +133,12 @@ Branch::Branch() : branch_name("master") {
         // Reading binary commit data and loading it onto our list<Commit>
         ifstream c_data(tvspath.string() + "/commit_nodes.bin", ios::binary);
         Commit commit;
-        // while(c_data.read(reinterpret_cast<char *>(&commit), sizeof(Commit))) {
-        //     commits.push_back(commit);
-        // }
+        while(c_data.read(reinterpret_cast<char *>(&commit), sizeof(Commit))) {
+            commits.push_back(commit);
+        }
         
         // Setting our HEAD to point to the current commit
-        for(HEAD = commits.begin(); (*HEAD).get_commit_id() != head_id; HEAD++);
+        // for(HEAD = commits.begin(); (*HEAD).get_commit_id() != head_id; HEAD++);
     }
 }
 
@@ -161,9 +161,10 @@ Branch::~Branch()
     }
     c_data.close();
     
+    Commit c = commits.back();
     // Writing branch_info
     ofstream b_data(commit_file_name);
-    b_data << (*HEAD).get_commit_id() << endl;
+    b_data << c.get_commit_id() << endl;
     b_data << branch_name << endl;
     for(auto filename : added_files) {
         b_data << filename << endl;
@@ -187,9 +188,9 @@ void Branch::commit_log(int n)
     //    }
     //} else {
     if(!commits.empty()) {
-        auto commit = HEAD;
+        auto commit = commits.back();
         for(int i = 0; i < n; ++i) {
-            (*commit).display_commit_data();
+            commit.display_commit_data();
         }
     } else {
         cout << "No commits yet." << endl;
@@ -215,7 +216,9 @@ void Commit::display_commit_data()
 int main()
 {
     tvsinit();
+    // Commit c;
+    // cout << c.get_commit_id();
     Branch master_branch;
-    master_branch.commit_log(2);
+    // master_branch.commit_log(2);
     return 0;
 }
