@@ -35,13 +35,13 @@ private:
     // int next_id;
     // int prev_id;
     string commit_msg;
+    int prev_id;
     vector<string> added_files;
-    int num_added;
 
 public:
     // Commit *next, *prev;
     Commit();
-    // ~Commit();
+    ~Commit();
     A_info get_author_info() {
         return info;
     }
@@ -54,9 +54,9 @@ public:
     void make_commit(string msg);
     void add_file(string filename);
     void store_files();
+    void load_files();
     void display_commit_data();
-    void save(ofstream &ofile);
-    void open(ifstream &ifile);
+    void checkout(string id);
 };
 
 Commit::Commit() : info(A_info())
@@ -65,14 +65,14 @@ Commit::Commit() : info(A_info())
     if(ifile) {
         getline(ifile, commit_id);
         getline(ifile, commit_msg);
+        load_files();
     } else {
         ifile.close();
-        commit_id = "-1";
+        commit_id = "0";
         ofstream ofile("./.tvs/branch_info");
         ofile << "0" << endl;
         ofile << "init" << endl;
         ofile.close();
-        num_added = 0;
         cout << "No commits yet. Making first commit." << endl;
     }
     ifile.close();
@@ -80,9 +80,13 @@ Commit::Commit() : info(A_info())
 
 void Commit::make_commit(string msg)
 {
-    if(!added_files.empty()) {
+    if(!added_files.empty() && commit_id != "-1") {
         int id = stoi(commit_id);
-        commit_id = to_string(++id);
+        prev_id = id - 1;
+        while(fs::exists(".tvs/" + to_string(id))) {
+            id++;
+        }
+        commit_id = to_string(id);
         commit_msg = msg;
         remove("./.tvs/added_files");
         remove("./.tvs/branch_info");
@@ -90,12 +94,38 @@ void Commit::make_commit(string msg)
         ofile << commit_id << endl;
         ofile << commit_msg << endl;
         fs::path dst("./.tvs/" + commit_id + "/");
+        if(prev_id != -1) {
+            fs::path prev_commit_dir("./.tvs/" + to_string(prev_id) + "/");
+            fs::copy(prev_commit_dir, dst, fs::copy_options::recursive|fs::copy_options::update_existing);
+        }
         fs::create_directory("./.tvs/" + commit_id);
         for(auto file : added_files) {
-            fs::copy("./" + file, dst);
+            fs::copy("./" + file, dst, fs::copy_options::update_existing);
         }
+        added_files.clear();
+        prev_id = id - 1;
     } else {
         cout << "Please add files to commit." << endl;
+    }
+}
+
+void Commit::checkout(string id)
+{
+    if(added_files.empty()) {
+        commit_id = id;
+        fs::path src(".tvs/" + id);
+        if(!fs::exists(src)) {
+            cout << "Invalid commit ID. Aborting." << endl;
+            return;
+        }
+        fs::path dst(".");
+        fs::copy(src, dst, fs::copy_options::recursive|fs::copy_options::overwrite_existing);
+        remove("./.tvs/branch_info");
+        ofstream ofile("./.tvs/branch_info");
+        ofile << commit_id << endl;
+        ofile << commit_msg << endl;
+    } else {
+        cout << "Working directory not clean.\nPlease commit your changes before checkout." <<endl;
     }
 }
 
@@ -113,17 +143,21 @@ void Commit::store_files()
     ofile.close();
 }
 
-// Commit::~Commit() : info(A_info())
-// {
-//     ofstream ifile("./.tvs/" + "/branch_info");
-//     if(ifile) {
-//         getline(ifile, commit_id);
-//         getline(ifile, commit_msg);
-//     } else {
-//         cout << "No commits yet" << endl;
-//     }
-//     ifile.close();
-// }
+void Commit::load_files()
+{
+    ifstream ifile("./.tvs/added_files");
+    string fn;
+    while(ifile) {
+        getline(ifile, fn);
+        added_files.push_back(fn);
+    }
+    ifile.close();
+}
+
+Commit::~Commit()
+{
+    store_files();
+}
 
 // Init function
 
@@ -148,10 +182,20 @@ int main()
 {
     tvsinit();
     Commit c;
+    cout << "---------------" << endl;
     c.add_file("tvs.cpp");
-    c.add_file("DOCS.md");
     c.make_commit("henlo");
-    cout << c.get_commit_id();
+    cout << c.get_commit_id() << endl;
+    cout << "---------------" << endl;
+    c.add_file("DOCS.md");
+    c.make_commit("henlo2");
+    ofstream("DOCS.md").put('a');
+    c.add_file("DOCS.md");
+    c.make_commit("henlo3");
+    cout << "---------------" << endl;
+    cout << c.get_commit_id() << endl;
+    c.checkout("1");
+    cout << c.get_commit_id() << endl;
     // master_branch.commit_log(2);
     return 0;
 }
