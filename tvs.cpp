@@ -39,7 +39,7 @@ private:
 public:
     // Commit *next, *prev;
     Commit();
-    ~Commit();
+    // ~Commit();
     A_info get_author_info() {
         return info;
     }
@@ -49,7 +49,7 @@ public:
     string get_commit_msg() {
         return commit_msg;
     }
-    void read_head();
+    void make_commit(string msg);
     void store_files(string *added_files);
     void display_commit_data();
     void save(ofstream &ofile);
@@ -63,22 +63,38 @@ Commit::Commit() : info(A_info())
         getline(ifile, commit_id);
         getline(ifile, commit_msg);
     } else {
+        ifile.close();
+        ofstream ofile("./.tvs/branch_info");
+        ofile << "0" << endl;
+        ofile << "init" << endl;
+        ofile.close();
         cout << "No commits yet" << endl;
     }
     ifile.close();
 }
 
-Commit::~Commit() : info(A_info())
+void Commit::make_commit(string msg)
 {
-    ifstream ifile("./.tvs/branch_info");
-    if(ifile) {
-        getline(ifile, commit_id);
-        getline(ifile, commit_msg);
-    } else {
-        cout << "No commits yet" << endl;
-    }
-    ifile.close();
+    int id = stoi(commit_id);
+    commit_id = to_string(++id);
+    commit_msg = msg;
+    remove("./.tvs/branch_info");
+    ofstream ofile("./.tvs/branch_info");
+    ofile << commit_id << endl;
+    ofile << commit_msg << endl;
 }
+
+// Commit::~Commit() : info(A_info())
+// {
+//     ofstream ifile("./.tvs/" + "/branch_info");
+//     if(ifile) {
+//         getline(ifile, commit_id);
+//         getline(ifile, commit_msg);
+//     } else {
+//         cout << "No commits yet" << endl;
+//     }
+//     ifile.close();
+// }
 
 // Init function
 
@@ -103,6 +119,7 @@ int main()
 {
     tvsinit();
     Commit c;
+    c.make_commit("henlo");
     cout << c.get_commit_id();
     // master_branch.commit_log(2);
     return 0;
