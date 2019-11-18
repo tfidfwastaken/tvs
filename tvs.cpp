@@ -29,7 +29,6 @@ void Commit::make_commit(string msg)
         }
         commit_id = to_string(id);
         commit_msg = msg;
-        remove("./.tvs/added_files");
         remove("./.tvs/branch_info");
         ofstream ofile("./.tvs/branch_info");
         ofile << commit_id << endl;
@@ -37,36 +36,38 @@ void Commit::make_commit(string msg)
         fs::path dst("./.tvs/" + commit_id + "/");
         if(prev_id != -1) {
             fs::path prev_commit_dir("./.tvs/" + to_string(prev_id) + "/");
-            fs::copy(prev_commit_dir, dst, fs::copy_options::recursive|fs::copy_options::update_existing);
+            fs::copy(prev_commit_dir, dst, fs::copy_options::recursive|fs::copy_options::overwrite_existing);
         }
         fs::create_directory("./.tvs/" + commit_id);
         for(auto file : added_files) {
-            fs::copy("./" + file, dst, fs::copy_options::update_existing);
+            fs::copy("./" + file, dst, fs::copy_options::overwrite_existing);
         }
         added_files.clear();
+        fs::remove("./.tvs/added_files");
         prev_id = id - 1;
     } else {
         cout << "Please add files to commit." << endl;
     }
 }
 
-void Commit::checkout(string id)
+void Commit::checkout(string id) //nope
 {
     if(added_files.empty()) {
-        commit_id = id;
         fs::path src(".tvs/" + id);
         if(!fs::exists(src)) {
             cout << "Invalid commit ID. Aborting." << endl;
             return;
         }
-        fs::path dst(".");
+        fs::path dst("./");
         fs::copy(src, dst, fs::copy_options::recursive|fs::copy_options::overwrite_existing);
         remove("./.tvs/branch_info");
+        commit_id = id;
         ofstream ofile("./.tvs/branch_info");
         ofile << commit_id << endl;
         ofile << commit_msg << endl;
     } else {
-  
+        cout << "Working directory not clean." << endl;
+        cout << "Please commit your changes before checkout." << endl;
     }
 }
 
@@ -95,13 +96,27 @@ void Commit::load_files()
     ifile.close();
 }
 
+void Commit::status()
+{
+    cout << "Last commit: " << commit_msg << endl;
+    cout << "ID: " << commit_id << endl;
+    if(added_files.empty()) { //something off here
+        cout << "No added files. Working directory is clean." << endl;
+    } else {
+        cout << "Added files:" << endl;
+        for(auto file : added_files) {
+            cout << file << endl;
+        }
+    }
+}
+
 Commit::~Commit()
 {
-    store_files();
+    if(!added_files.empty())
+        store_files();
 }
 
 // Init function
-
 int tvsinit()
 {
     // creates a path object

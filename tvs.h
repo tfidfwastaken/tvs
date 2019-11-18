@@ -41,7 +41,6 @@ private:
     vector<string> added_files;
 
 public:
-    // Commit *next, *prev;
     Commit();
     ~Commit();
     A_info get_author_info() {
@@ -57,6 +56,6 @@ public:
     void add_file(string filename);
     void store_files();
     void load_files();
-    void display_commit_data();
+    void status();
     void checkout(string id);
 };
