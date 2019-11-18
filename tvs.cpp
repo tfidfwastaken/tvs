@@ -13,17 +13,17 @@ private:
     string username;
     string email;
 public:
-    A_info();
+    // A_info();
     string get_username() {
         return username;
     }
     string get_email() {
         return email;
     }
-    void set_username(char *uname) {
+    void set_username(string uname) {
         this->username = uname;
     }
-    void set_email(char *email) {
+    void set_email(string email) {
         this->email = email;
     }
 };
@@ -31,19 +31,19 @@ public:
 class Commit {
 private:
     A_info info;
-    int commit_id;
+    string commit_id;
     // int next_id;
     // int prev_id;
     string commit_msg;
 
 public:
     // Commit *next, *prev;
-    Commit();
+    Commit() : info(A_info()), commit_id(string()), commit_msg("") {};
     A_info get_author_info() {
-        return info;        
+        return info;
     }
-    int get_commit_id() {
-        return commit_id;
+    string get_commit_id() {
+        return "";
     }
     string get_commit_msg() {
         return commit_msg;
@@ -85,7 +85,7 @@ public:
     void add(string *filenames);
     void status();
     void commit(char *msg);
-    void checkout(int commit_id);
+    void checkout(string commit_id);
     ~Branch();
 };
 
@@ -111,6 +111,7 @@ int tvsinit()
 // Branch function definitions
 Branch::Branch() : branch_name("master") {
 
+    commits = list<Commit>();
     fs::path tvspath("./.tvs");
     if(!fs::exists(tvspath)) {
         tvsinit();
@@ -132,12 +133,12 @@ Branch::Branch() : branch_name("master") {
         // Reading binary commit data and loading it onto our list<Commit>
         ifstream c_data(tvspath.string() + "/commit_nodes.bin", ios::binary);
         Commit commit;
-        while(c_data.read(&commit, sizeof(Commit))) {
-            commits.push_back(commit);
-        }
+        // while(c_data.read(reinterpret_cast<char *>(&commit), sizeof(Commit))) {
+        //     commits.push_back(commit);
+        // }
         
         // Setting our HEAD to point to the current commit
-        for(HEAD = commits.end(); (*HEAD).get_commit_id() != head_id; HEAD++);
+        for(HEAD = commits.begin(); (*HEAD).get_commit_id() != head_id; HEAD++);
     }
 }
 
@@ -147,16 +148,16 @@ Branch::~Branch()
     fs::path tvspath("./.tvs");
     auto commit_file_name = tvspath.string() + "/commit_nodes.bin";
     auto branch_file_name = tvspath.string() + "/branch_info";
-    remove(commit_file_name);
-    remove(branch_file_name);
+    remove(commit_file_name.c_str());
+    remove(branch_file_name.c_str());
 
     // Writing our data to files
 
     // Writing commit data to binary format
     ofstream c_data(commit_file_name, ios::binary);
     for(auto cmt = commits.end(); cmt != commits.begin(); cmt--) {
-        // c_data.write(&(*cmt), sizeof(Commit));
-        cmt.save(c_data);
+        // c_data.write(reinterpret_cast<char *>(&(*cmt)), sizeof(Commit));
+        // cmt.save(c_data);
     }
     c_data.close();
     
@@ -206,9 +207,9 @@ void Commit::display_commit_data()
     cout << "ID: " << get_commit_id() << endl; 
 }
 
-void save(ofstream &of)
-{
-    of.write(
+// void save(ofstream &of)
+// {
+//     of.write((char *)(info
 
 // main for testing
 int main()
